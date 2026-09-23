@@ -1,0 +1,9 @@
+# WFM POC configuration. Paths are relative to the wfm/ folder.
+# Values marked DEMO ASSUMPTION are placeholders until confirmed (see PRD section 7).
+
+timezone: America/New_York  # DEMO ASSUMPTION
+
+paths:
+  agents_csv: data/agents.csv
+  acd_history_csv: data/acd_history.csv
+  runs_dir: runs
