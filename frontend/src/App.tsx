@@ -20,8 +20,12 @@ import { AgentScheduleModal } from './components/AgentScheduleModal.tsx'
 import { AgentTable } from './components/AgentTable.tsx'
 import { ForecastCharts } from './components/ForecastCharts.tsx'
 import { HierarchyTree, type HierarchySelection } from './components/HierarchyTree.tsx'
+import { QueueSchedulePanel } from './components/QueueSchedulePanel.tsx'
+import { ScheduleRunControl } from './components/ScheduleRunControl.tsx'
+import { ScheduleSummary } from './components/ScheduleSummary.tsx'
 
-type QueueTab = 'agents' | 'forecasts'
+type QueueTab = 'agents' | 'forecasts' | 'schedule'
+const TABS: QueueTab[] = ['agents', 'forecasts', 'schedule']
 
 // Tab panels fill the remaining height so the grid and charts can scroll inside them.
 const PANEL_STYLE = { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } as const
@@ -50,9 +54,12 @@ export default function App() {
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Title order={3}>Workforce Management POC</Title>
-          <Badge color={health.isSuccess ? 'green' : health.isError ? 'red' : 'gray'}>
-            API: {health.isSuccess ? health.data.status : health.isError ? 'unreachable' : 'checking'}
-          </Badge>
+          <Group gap="md">
+            <ScheduleRunControl />
+            <Badge color={health.isSuccess ? 'green' : health.isError ? 'red' : 'gray'}>
+              API: {health.isSuccess ? health.data.status : health.isError ? 'unreachable' : 'checking'}
+            </Badge>
+          </Group>
         </Group>
       </AppShell.Header>
 
@@ -95,19 +102,27 @@ export default function App() {
             </Stack>
 
             {selection.kind !== 'queue' ? (
-              <Text size="sm" c="dimmed">
-                {KIND_LABEL[selection.kind]} — select a queue to see its agents and forecasts.
-              </Text>
+              <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+                <Stack gap="sm">
+                  <Text size="sm" c="dimmed">
+                    {KIND_LABEL[selection.kind]} — select a queue to see its agents, forecasts and schedule.
+                  </Text>
+                  {hierarchy.isSuccess && (
+                    <ScheduleSummary level={selection.kind} code={selection.code} org={hierarchy.data} />
+                  )}
+                </Stack>
+              </ScrollArea>
             ) : (
               <Tabs
                 value={tab}
-                onChange={(v) => setTab(v === 'forecasts' ? 'forecasts' : 'agents')}
+                onChange={(v) => setTab(TABS.find((t) => t === v) ?? 'agents')}
                 keepMounted={false}
                 style={PANEL_STYLE}
               >
                 <Tabs.List>
                   <Tabs.Tab value="agents">Agents</Tabs.Tab>
                   <Tabs.Tab value="forecasts">Forecasts</Tabs.Tab>
+                  <Tabs.Tab value="schedule">Schedule</Tabs.Tab>
                 </Tabs.List>
 
                 <Tabs.Panel value="agents" pt="sm" style={PANEL_STYLE}>
@@ -129,7 +144,11 @@ export default function App() {
                 </Tabs.Panel>
 
                 <Tabs.Panel value="forecasts" pt="sm" style={PANEL_STYLE}>
-                  <ForecastCharts key={selection.code} queueId={selection.code} />
+                  <ForecastCharts key={selection.code} queueId={selection.code} queueName={selection.name} />
+                </Tabs.Panel>
+
+                <Tabs.Panel value="schedule" pt="sm" style={PANEL_STYLE}>
+                  <QueueSchedulePanel key={selection.code} queueId={selection.code} onOpenAgent={setOpenAgentId} />
                 </Tabs.Panel>
               </Tabs>
             )}

@@ -102,9 +102,14 @@ def test_schedule_endpoint() -> None:
     body = client.get("/api/agents/AG2/schedule?weeks=2").json()
     assert body["agent"]["agent_id"] == "AG2"
     assert body["agent"]["work_plan_id"] == "WP-PT"
-    assert body["schedule"]["source"] == "mock"
-    assert body["schedule"]["horizon_start"] == "2026-09-28"
-    assert len(body["schedule"]["weeks"]) == 2
+    # No schedule run exists in this fixture, so the labelled mock is served in the plan format.
+    schedule = body["schedule"]
+    assert schedule["source"] == "mock"
+    assert schedule["weeks"][0]["week_start"] == "2026-09-28"
+    assert len(schedule["weeks"]) == 2
+    day = next(d for d in schedule["weeks"][0]["days"] if d["status"] == "Working")
+    assert day["start"].endswith("-04:00")  # timezone-aware
+    assert {a["activity_type"] for a in day["activities"]} == {"On Phone", "Paid Break"}
     assert len(client.get("/api/agents/AG1/schedule").json()["schedule"]["weeks"]) == 6
     assert client.get("/api/agents/NOPE/schedule").status_code == 404
     assert client.get("/api/agents/AG1/schedule?weeks=7").status_code == 422

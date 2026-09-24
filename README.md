@@ -40,6 +40,19 @@ and set `WFM_CONFIG_PATH=config/wfm.yaml` in `.env`.
 | `make test` | pytest + vitest |
 | `make check` | lint, typecheck and test |
 
+## Scheduling
+
+1. Open a queue's **Forecasts** tab once so a forecast run is saved.
+2. Click **Generate schedule** in the header (targets and solver limits are editable).
+3. A worker process builds 15-minute Erlang C requirements, solves CP-SAT per queue
+   (shortage → excess/paid → preferences) and independently validates every hard rule.
+4. Results appear in each queue's **Schedule** tab, the agent calendar, and BU/MU summaries;
+   CSV exports are on the Schedule tab. Runs are saved under `runs/schedules/<run_id>/`.
+
+Erlang C gives approximate interval requirements and CP-SAT optimises assignments against them;
+a feasible schedule does not by itself prove real-world service levels will be met.
+See `PLAN.md` for policies, assumptions and findings.
+
 ## Layout
 
 ```

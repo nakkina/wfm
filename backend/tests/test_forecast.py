@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.conftest import write_acd
+from tests.conftest import START, WEEKLY, daily_frame
 from wfm.api import main
 from wfm.config import ForecastSettings
 from wfm.forecast.daily import (
@@ -21,30 +21,6 @@ from wfm.forecast.store import file_fingerprint, load_matching, save_run
 
 # Small settings keep tests fast: needs horizon 14 + one 7-day step + 28 = 49 days of history.
 SETTINGS = ForecastSettings(horizon_days=14, levels=[80, 95], cv_windows=2, cv_step_days=7)
-START = date(2026, 6, 23)
-WEEKLY = [900, 950, 980, 1000, 870, 400, 350]  # weekday shape
-
-
-def daily_frame(
-    days: int = 60, noise: float = 0.0, queues: tuple[str, ...] = ("Q-1", "Q-3")
-) -> pd.DataFrame:
-    rng = np.random.default_rng(7)
-    rows = []
-    for q in queues:
-        for i in range(days):
-            d = START + timedelta(days=i)
-            offered = WEEKLY[d.weekday()] * (1 + noise * rng.standard_normal())
-            handled = round(offered * 0.95)
-            rows.append(
-                {
-                    "queue_id": q,
-                    "date": d,
-                    "calls_offered": round(offered),
-                    "calls_handled": handled,
-                    "handle_seconds": handled * (600 + (30 if d.weekday() == 0 else 0)),
-                }
-            )
-    return pd.DataFrame(rows)
 
 
 def test_horizon_starts_after_history_for_both_targets() -> None:
@@ -182,42 +158,6 @@ def test_save_and_reuse_only_matching_runs(tmp_path: Path) -> None:
     meta["method_version"] = METHOD_VERSION - 1
     (run_dir / "meta.json").write_text(json.dumps(meta))
     assert load_matching(tmp_path / "runs", fingerprint, SETTINGS) is None
-
-
-@pytest.fixture
-def forecast_config(fixture_config: Path, tmp_path: Path) -> Path:
-    """fixture_config, but with 50 days of hourly ACD history and small forecast settings."""
-    hourly = []
-    for row in daily_frame(days=50, noise=0.1).to_dict("records"):
-        q = str(row["queue_id"])
-        hourly.append(  # one hourly row per day carrying the whole day's totals
-            {
-                "bu_id": "BU-1" if q == "Q-1" else "BU-2",
-                "mu_id": "MU-1" if q == "Q-1" else "MU-2",
-                "queue_id": q,
-                "interval_start_local": datetime.combine(row["date"], time(12)),
-                "calls_offered": row["calls_offered"],
-                "calls_handled": row["calls_handled"],
-                "handle_seconds": row["handle_seconds"],
-            }
-        )
-    events = pd.DataFrame(
-        [
-            {
-                "start_date": "2026-07-06",
-                "end_date": "2026-07-06",
-                "scope": "MU-1",
-                "event_name": "Campaign",
-            }
-        ]
-    )
-    acd = write_acd(tmp_path / "acd_long.xlsx", pd.DataFrame(hourly), events)
-    text = fixture_config.read_text()
-    text = text.replace(str(tmp_path / "acd.xlsx"), str(acd))
-    text += "forecast:\n  horizon_days: 7\n  levels: [80, 95]\n  cv_windows: 2\n  cv_step_days: 7\n"
-    fixture_config.write_text(text)
-    main._cache.clear()
-    return fixture_config
 
 
 @pytest.mark.usefixtures("forecast_config")

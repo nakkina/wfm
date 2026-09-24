@@ -17,6 +17,7 @@ from wfm.hierarchy import Organization
 
 AGENTS_SHEET = "Agents"
 SHIFTS_SHEET = "Shifts"
+QUEUES_SHEET = "Queues"
 DICTIONARY_SHEET = "Dictionary"
 ORG_COLUMNS = ["bu_id", "bu_name", "mu_id", "mu_name", "queue_id", "queue_name"]
 
@@ -53,6 +54,25 @@ class ShiftTemplate(BaseModel):
         return None if isinstance(value, float) and pd.isna(value) else value
 
 
+class QueueInfo(BaseModel):
+    """One row of the optional Queues sheet: opening hours and eligibility for a queue."""
+
+    queue_id: str
+    required_skill: str | None = None
+    timezone: str
+    open_days: str  # "Mon;Tue;..."
+    open_time: time
+    close_time: time
+
+    @field_validator("open_time", "close_time", mode="before")
+    @classmethod
+    def parse_hhmm(cls, value: object) -> object:
+        return time.fromisoformat(value) if isinstance(value, str) else value
+
+    def open_on(self, weekday: str) -> bool:
+        return weekday in {d.strip() for d in self.open_days.split(";")}
+
+
 class ColumnInfo(BaseModel):
     field: str
     category: str
@@ -66,6 +86,7 @@ class AgentRoster:
     agents: pd.DataFrame
     columns: list[ColumnInfo]
     shifts: list[ShiftTemplate]
+    queues: dict[str, QueueInfo]  # empty when the workbook has no Queues sheet
 
 
 class RosterError(ValueError):
@@ -77,18 +98,39 @@ def normalize_header(name: object) -> str:
 
 
 def load_agent_roster(path: Path, org: Organization) -> AgentRoster:
-    sheets = pd.read_excel(path, sheet_name=[AGENTS_SHEET, SHIFTS_SHEET, DICTIONARY_SHEET])
-    agents = sheets[AGENTS_SHEET].rename(columns=normalize_header)
-    dictionary = sheets[DICTIONARY_SHEET].rename(columns=normalize_header)
-    shifts_frame = sheets[SHIFTS_SHEET].rename(columns=normalize_header)
+    with pd.ExcelFile(path) as workbook:
+        agents = workbook.parse(AGENTS_SHEET).rename(columns=normalize_header)
+        dictionary = workbook.parse(DICTIONARY_SHEET).rename(columns=normalize_header)
+        shifts_frame = workbook.parse(SHIFTS_SHEET).rename(columns=normalize_header)
+        queues_frame = (
+            workbook.parse(QUEUES_SHEET).rename(columns=normalize_header)
+            if QUEUES_SHEET in workbook.sheet_names
+            else None
+        )
 
     columns = [
         ColumnInfo.model_validate({k: str(v) for k, v in row.items()})
         for row in dictionary.to_dict("records")
     ]
     shifts = [ShiftTemplate.model_validate(row) for row in shifts_frame.to_dict("records")]
+    queues = _queues(queues_frame, org)
     _validate(agents, columns, org)
-    return AgentRoster(agents=agents, columns=columns, shifts=shifts)
+    return AgentRoster(agents=agents, columns=columns, shifts=shifts, queues=queues)
+
+
+def _queues(frame: pd.DataFrame | None, org: Organization) -> dict[str, QueueInfo]:
+    if frame is None:
+        return {}
+    fields = set(QueueInfo.model_fields)
+    queues = {}
+    for row in frame.to_dict("records"):
+        clean = {k: (None if isinstance(v, float) and pd.isna(v) else v) for k, v in row.items()}
+        info = QueueInfo.model_validate({k: v for k, v in clean.items() if k in fields})
+        queues[info.queue_id] = info
+    known = {q.id for q in org.queues()}
+    if unknown := sorted(set(queues) - known):
+        raise RosterError(f"Queues sheet lists queues not in the hierarchy: {', '.join(unknown)}")
+    return queues
 
 
 def _validate(agents: pd.DataFrame, columns: list[ColumnInfo], org: Organization) -> None:

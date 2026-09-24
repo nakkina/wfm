@@ -55,6 +55,8 @@ class QueueHistory(BaseModel):
 @dataclass(frozen=True)
 class AcdHistory:
     daily: pd.DataFrame  # one row per queue per local date; `event` names or None
+    # One row per queue per local date and hour: calls_offered, is_event (for intraday profiles).
+    hourly: pd.DataFrame
 
 
 def load_acd_history(path: Path, org: Organization) -> AcdHistory:
@@ -66,10 +68,22 @@ def load_acd_history(path: Path, org: Organization) -> AcdHistory:
             else None
         )
     _validate(hourly, org)
-    hourly["date"] = pd.to_datetime(hourly["interval_start_local"]).dt.date
+    starts = pd.to_datetime(hourly["interval_start_local"])
+    hourly["date"] = starts.dt.date
+    hourly["hour"] = starts.dt.hour
     daily = hourly.groupby(["queue_id", "date"], as_index=False)[SUMMED_COLUMNS].sum()
     daily["event"] = _event_labels(daily, events, org)
-    return AcdHistory(daily=daily)
+    event_days = {
+        (q, d)
+        for q, d, e in zip(daily["queue_id"], daily["date"], daily["event"], strict=True)
+        if e
+    }
+    hourly_out = hourly[["queue_id", "date", "hour", "calls_offered"]].copy()
+    hourly_out["is_event"] = [
+        (q, d) in event_days
+        for q, d in zip(hourly_out["queue_id"], hourly_out["date"], strict=True)
+    ]
+    return AcdHistory(daily=daily, hourly=hourly_out)
 
 
 def _event_labels(

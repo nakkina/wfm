@@ -1,9 +1,19 @@
 import { Alert, Badge, Group, Loader, Paper, ScrollArea, Stack, Text, Tooltip } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import type { Data, Layout } from 'plotly.js'
-import { lazy, Suspense } from 'react'
+import type { Config, Data, Layout, PlotRelayoutEvent, PlotSelectionEvent } from 'plotly.js'
+import { lazy, Suspense, useState } from 'react'
 
-import { fetchQueueForecast, type TargetForecast } from '../api/forecast.ts'
+import { fetchQueueForecast, type HistoryDay, type TargetForecast } from '../api/forecast.ts'
+import {
+  chartCsv,
+  chartFileName,
+  downloadText,
+  forecastFocusRange,
+  summarizeSelection,
+  xRangeFromRelayout,
+  type SelectionSummary,
+  type XRange,
+} from './chartTools.ts'
 import {
   eventMarkers,
   forecastBands,
@@ -28,7 +38,18 @@ const Plot = lazy(async () => {
 const COLORS = { volume: '34, 139, 230', aht: '232, 89, 12' } // RGB, reused with alpha for bands
 const BAND_ALPHA: Record<number, number> = { 95: 0.12, 80: 0.25 }
 
-export function ForecastCharts({ queueId }: { queueId: string }) {
+// Material Design icons (Apache 2.0), 24×24.
+const DOWNLOAD_ICON = { width: 24, height: 24, path: 'M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z' }
+const RESET_ICON = { width: 24, height: 24, path: 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z' }
+const FOCUS_ICON = {
+  width: 24,
+  height: 24,
+  path: 'M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-7 7H3v4c0 1.1.9 2 2 2h4v-2H5v-4zM5 5h4V3H5c-1.1 0-2 .9-2 2v4h2V5zm14-2h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm0 16h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4z',
+}
+
+type Props = { queueId: string; queueName: string }
+
+export function ForecastCharts({ queueId, queueName }: Props) {
   // Served from the saved forecast run; it only changes when a new run is generated,
   // so keep it for the session instead of refetching on every visit.
   const query = useQuery({
@@ -36,6 +57,8 @@ export function ForecastCharts({ queueId }: { queueId: string }) {
     queryFn: () => fetchQueueForecast(queueId),
     staleTime: Infinity,
   })
+  // Both charts share one x-range, so zoom/pan/reset on either applies to both.
+  const [xRange, setXRange] = useState<XRange>(null)
 
   if (query.isPending)
     return (
@@ -57,6 +80,8 @@ export function ForecastCharts({ queueId }: { queueId: string }) {
   const fc = query.data
   const { volume, aht } = historySeries(fc.history)
   const forecastEnd = (fc.volume ?? fc.aht)?.points.at(-1)?.date
+  const focus = forecastEnd ? forecastFocusRange(fc.history_end, forecastEnd) : null
+  const shared = { historyDays: fc.history, historyEnd: fc.history_end, xRange, onXRange: setXRange, focus, queueName }
 
   return (
     <ScrollArea style={{ flex: 1 }} offsetScrollbars>
@@ -77,6 +102,10 @@ export function ForecastCharts({ queueId }: { queueId: string }) {
             </Badge>
           </Tooltip>
         </Group>
+        <Text size="xs" c="dimmed">
+          Chart tools (top right of each chart): zoom and pan apply to both charts; box or lasso select
+          summarizes the selected days; double-click or “Reset axes” shows everything again.
+        </Text>
         {fc.warnings.map((w) => (
           <Alert key={w} color="yellow" title="Data warning">
             {w}
@@ -85,23 +114,28 @@ export function ForecastCharts({ queueId }: { queueId: string }) {
 
         <Suspense fallback={<Loader size="sm" />}>
           <TrendChart
+            {...shared}
             title="Call volume (calls offered per day)"
+            metric="Call volume"
             history={volume}
+            actualOf={(d) => d.calls_offered}
             events={eventMarkers(fc.history, volume)}
             forecast={fc.volume}
-            historyEnd={fc.history_end}
             yTitle="Calls offered"
             valueFormat=",.0f"
             unit=" calls"
             rgb={COLORS.volume}
             fromZero
+            summable
           />
           <TrendChart
+            {...shared}
             title="Average handle time (handle seconds ÷ handled calls, per day)"
+            metric="Average handle time"
             history={aht}
+            actualOf={(d) => d.aht_seconds}
             events={eventMarkers(fc.history, aht)}
             forecast={fc.aht}
-            historyEnd={fc.history_end}
             yTitle="AHT (seconds)"
             valueFormat=".0f"
             unit=" s"
@@ -115,29 +149,51 @@ export function ForecastCharts({ queueId }: { queueId: string }) {
 
 type ChartProps = {
   title: string
+  metric: string // used in file names
+  queueName: string
   history: Series
+  historyDays: HistoryDay[]
+  actualOf: (day: HistoryDay) => number | null
   events: EventMarkers
   forecast: TargetForecast | null
   historyEnd: string
+  xRange: XRange
+  onXRange: (range: XRange) => void
+  focus: [string, string] | null
   yTitle: string
   valueFormat: string
   unit: string
   rgb: string
   fromZero?: boolean // counts start at zero; AHT uses a tighter range so variation is visible
+  summable?: boolean // totals are meaningful for counts, not for AHT
 }
 
 function TrendChart({
   title,
+  metric,
+  queueName,
   history,
+  historyDays,
+  actualOf,
   events,
   forecast,
   historyEnd,
+  xRange,
+  onXRange,
+  focus,
   yTitle,
   valueFormat,
   unit,
   rgb,
   fromZero = false,
+  summable = false,
 }: ChartProps) {
+  const [selection, setSelection] = useState<SelectionSummary | null>(null)
+  // The chosen tool (zoom, pan, box/lasso select) is kept in state: otherwise re-rendering
+  // (e.g. to show a selection summary) resets it to zoom.
+  const [dragmode, setDragmode] = useState<Layout['dragmode']>('zoom')
+  const fileBase = chartFileName(queueName, metric)
+
   const traces: Data[] = [
     {
       type: 'scatter',
@@ -207,11 +263,17 @@ function TrendChart({
 
   const marker = forecastStartMarker(historyEnd)
   const layout: Partial<Layout> = {
-    height: 300,
-    margin: { l: 60, r: 16, t: 8, b: 40 },
-    xaxis: { type: 'date', tickformat: '%b %d', showgrid: true },
+    height: 330,
+    margin: { l: 60, r: 16, t: 28, b: 70 },
+    // Preserves other interactive UI state (legend toggles, y-zoom) across re-renders.
+    uirevision: 'keep',
+    dragmode,
+    xaxis: xRange
+      ? { type: 'date', tickformat: '%b %d', showgrid: true, range: xRange, autorange: false }
+      : { type: 'date', tickformat: '%b %d', showgrid: true, autorange: true },
     yaxis: { title: { text: yTitle }, rangemode: fromZero ? 'tozero' : 'normal', separatethousands: true },
-    legend: { orientation: 'h', x: 0, y: 1.12 },
+    // Legend below the plot so it never sits under the tool buttons.
+    legend: { orientation: 'h', x: 0, y: -0.2, yanchor: 'top' },
     hovermode: 'x unified',
     shapes: [
       {
@@ -231,13 +293,64 @@ function TrendChart({
         xref: 'x',
         yref: 'paper',
         y: 1,
-        yanchor: 'bottom',
-        xanchor: 'left',
-        text: 'Forecast start',
+        yanchor: 'top',
+        xanchor: 'right',
+        text: 'Forecast start ',
         showarrow: false,
+        bgcolor: 'rgba(255, 255, 255, 0.8)',
         font: { size: 11, color: '#555' },
       },
     ],
+  }
+
+  const config: Partial<Config> = {
+    displaylogo: false,
+    responsive: true,
+    // Never offer to upload data to Plotly's cloud: agent and ACD data stay local (PRD §6).
+    showSendToCloud: false,
+    toImageButtonOptions: { format: 'png', filename: fileBase, width: 1400, height: 450, scale: 2 },
+    // Plotly's own "Reset axes" returns to the last range it was *given*, which with linked
+    // charts is the shared zoom itself; reset the shared range instead. Double-click too.
+    modeBarButtonsToRemove: ['resetScale2d'],
+    doubleClick: 'autosize',
+    modeBarButtonsToAdd: [
+      {
+        name: 'resetBoth',
+        title: 'Reset axes (both charts)',
+        icon: RESET_ICON,
+        click: () => onXRange(null),
+      },
+      {
+        name: 'downloadCsv',
+        title: 'Download data as CSV (actuals, forecast, intervals)',
+        icon: DOWNLOAD_ICON,
+        click: () => downloadText(`${fileBase}.csv`, chartCsv(historyDays, actualOf, forecast)),
+      },
+      ...(focus
+        ? [
+            {
+              name: 'focusForecast',
+              title: 'Focus on forecast period (last 4 weeks + forecast), both charts',
+              icon: FOCUS_ICON,
+              click: () => onXRange(focus),
+            },
+          ]
+        : []),
+    ],
+  }
+
+  function onRelayout(event: Readonly<PlotRelayoutEvent>) {
+    if (event.dragmode) setDragmode(event.dragmode)
+    const range = xRangeFromRelayout(event as Record<string, unknown>)
+    if (range !== undefined) onXRange(range)
+  }
+
+  function onSelected(event: Readonly<PlotSelectionEvent> | undefined) {
+    // Plotly sends an undefined event when a selection is cleared by clicking.
+    const points = event?.points ?? []
+    setSelection(
+      summarizeSelection(points.map((p) => ({ series: String(p.data.name ?? ''), value: Number(p.y) }))),
+    )
   }
 
   return (
@@ -262,10 +375,18 @@ function TrendChart({
       <Plot
         data={traces}
         layout={layout}
-        config={{ displaylogo: false, responsive: true }}
+        config={config}
         useResizeHandler
         style={{ width: '100%' }}
+        onRelayout={onRelayout}
+        onSelected={onSelected}
+        onDeselect={() => setSelection(null)}
       />
+      {selection && (
+        <Text size="xs" px={4} pb={4} aria-live="polite">
+          <b>Selection:</b> {describeSelection(selection, summable, unit)}
+        </Text>
+      )}
       {forecast?.diagnostics && (
         <Text size="xs" c="dimmed" px={4}>
           {predictabilityNote(forecast.diagnostics)}
@@ -273,4 +394,20 @@ function TrendChart({
       )}
     </Paper>
   )
+}
+
+function describeSelection(s: SelectionSummary, summable: boolean, unit: string): string {
+  const n = (x: number) => Math.round(x).toLocaleString('en-US')
+  const part = (label: string, days: number, total: number, mean: number) =>
+    days === 0
+      ? null
+      : summable
+        ? `${label} ${days} day${days === 1 ? '' : 's'}, total ${n(total)}${unit} (avg ${n(mean)}/day)`
+        : `${label} ${days} day${days === 1 ? '' : 's'}, average ${n(mean)}${unit}`
+  return [
+    part('Actual', s.actualDays, s.actualTotal, s.actualMean),
+    part('Forecast', s.forecastDays, s.forecastTotal, s.forecastMean),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }

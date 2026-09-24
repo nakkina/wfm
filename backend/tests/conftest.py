@@ -1,8 +1,10 @@
 """Synthetic workbook + config fixtures, so tests never read files in data/."""
 
 from collections.abc import Iterator
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -39,9 +41,28 @@ AGENTS = [
 ]
 NAMES = {"BU-1": "Banking", "BU-2": "Lending", "MU-1": "Deposits", "MU-2": "Mortgages"}
 QUEUE_NAMES = {"Q-1": "Checking", "Q-2": "Savings", "Q-3": "Payoff"}
-FIELDS = ["agent_id", "agent_name", "bu_id", "bu_name", "mu_id", "mu_name", "queue_id",
-          "queue_name", "hire_date", "csat_pct", "work_plan_id", "preferred_shift",
-          "allowed_shifts", "available_days", "preferred_days_off"]  # fmt: skip
+FIELDS = [
+    "agent_id",
+    "agent_name",
+    "bu_id",
+    "bu_name",
+    "mu_id",
+    "mu_name",
+    "queue_id",
+    "queue_name",
+    "hire_date",
+    "csat_pct",
+    "work_plan_id",
+    "preferred_shift",
+    "allowed_shifts",
+    "available_days",
+    "preferred_days_off",
+    "employment_type",
+    "weekly_min_hours",
+    "weekly_max_hours",
+    "minimum_rest_hours",
+    "max_consecutive_workdays",
+]
 
 
 def agents_frame() -> pd.DataFrame:
@@ -62,6 +83,11 @@ def agents_frame() -> pd.DataFrame:
             "allowed shifts": "s1;s2;s3",
             "available days": "Mon;Tue;Wed;Thu;Fri;Sat;Sun",
             "preferred days off": "Sat;Sun",
+            "employment type": "Full-time" if plan == "WP-FT" else "Part-time",
+            "weekly min hours": 40 if plan == "WP-FT" else 20,
+            "weekly max hours": 40 if plan == "WP-FT" else 20,
+            "minimum rest hours": 11,
+            "max consecutive workdays": 5,
         }
         for a, bu, mu, q, plan in AGENTS
     ]
@@ -75,8 +101,8 @@ def dictionary_frame() -> pd.DataFrame:
             "category": ["Identity"] * 2
             + ["Organization"] * 6
             + ["Employment", "Performance"]
-            + ["Scheduling"] * 5,
-            "type": ["string"] * 8 + ["date", "number 0–100"] + ["string"] * 5,
+            + ["Scheduling"] * 10,
+            "type": ["string"] * 8 + ["date", "number 0–100"] + ["string"] * 10,
             "poc use": ["Display"] * len(FIELDS),
             "description": [f"About {f}" for f in FIELDS],
         }
@@ -113,10 +139,27 @@ def shifts_frame() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def queues_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {
+                "queue id": q,
+                "required skill": None,
+                "timezone": "America/New_York",
+                "open days": "Mon;Tue;Wed;Thu;Fri;Sat;Sun",
+                "open time": "08:00",
+                "close time": "20:30",
+            }
+            for q in QUEUE_NAMES
+        ]
+    )
+
+
 def write_workbook(path: Path, agents: pd.DataFrame, dictionary: pd.DataFrame) -> Path:
     with pd.ExcelWriter(path) as writer:
         agents.to_excel(writer, sheet_name="Agents", index=False)
         shifts_frame().to_excel(writer, sheet_name="Shifts", index=False)
+        queues_frame().to_excel(writer, sheet_name="Queues", index=False)
         dictionary.to_excel(writer, sheet_name="Dictionary", index=False)
     return path
 
@@ -195,3 +238,65 @@ schedule:
     main._cache.clear()
     yield config
     main._cache.clear()
+
+
+START = date(2026, 6, 23)
+WEEKLY = [900, 950, 980, 1000, 870, 400, 350]  # weekday shape
+
+
+def daily_frame(
+    days: int = 60, noise: float = 0.0, queues: tuple[str, ...] = ("Q-1", "Q-3")
+) -> pd.DataFrame:
+    rng = np.random.default_rng(7)
+    rows = []
+    for q in queues:
+        for i in range(days):
+            d = START + timedelta(days=i)
+            offered = WEEKLY[d.weekday()] * (1 + noise * rng.standard_normal())
+            handled = round(offered * 0.95)
+            rows.append(
+                {
+                    "queue_id": q,
+                    "date": d,
+                    "calls_offered": round(offered),
+                    "calls_handled": handled,
+                    "handle_seconds": handled * (600 + (30 if d.weekday() == 0 else 0)),
+                }
+            )
+    return pd.DataFrame(rows)
+
+
+@pytest.fixture
+def forecast_config(fixture_config: Path, tmp_path: Path) -> Path:
+    """fixture_config, but with 50 days of hourly ACD history and small forecast settings."""
+    hourly = []
+    for row in daily_frame(days=50, noise=0.1).to_dict("records"):
+        q = str(row["queue_id"])
+        hourly.append(  # one hourly row per day carrying the whole day's totals
+            {
+                "bu_id": "BU-1" if q == "Q-1" else "BU-2",
+                "mu_id": "MU-1" if q == "Q-1" else "MU-2",
+                "queue_id": q,
+                "interval_start_local": datetime.combine(row["date"], time(12)),
+                "calls_offered": row["calls_offered"],
+                "calls_handled": row["calls_handled"],
+                "handle_seconds": row["handle_seconds"],
+            }
+        )
+    events = pd.DataFrame(
+        [
+            {
+                "start_date": "2026-07-06",
+                "end_date": "2026-07-06",
+                "scope": "MU-1",
+                "event_name": "Campaign",
+            }
+        ]
+    )
+    acd = write_acd(tmp_path / "acd_long.xlsx", pd.DataFrame(hourly), events)
+    text = fixture_config.read_text()
+    text = text.replace(str(tmp_path / "acd.xlsx"), str(acd))
+    text += "forecast:\n  horizon_days: 7\n  levels: [80, 95]\n  cv_windows: 2\n  cv_step_days: 7\n"
+    fixture_config.write_text(text)
+    main._cache.clear()
+    return fixture_config

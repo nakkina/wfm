@@ -15,6 +15,29 @@ forecast:
   cv_windows: 6             # rolling-origin backtests used for model choice and intervals
   cv_step_days: 7
 
+staffing:
+  interval_minutes: 15
+  service_level_target: 0.80      # share of calls answered within the threshold
+  answer_threshold_seconds: 20
+  max_occupancy: 0.85
+  residual_shrinkage: 0.10        # unplanned only; breaks, meals and leave are scheduled explicitly
+  closing_minutes: 15             # finishing-work coverage after queue close (0 disables)
+  # Share of an hour's calls in each 15-minute slot; null = equal across the open minutes.
+  within_hour_proportions: null
+
+scheduling:
+  break_stagger_slots: 0          # 0 = Shifts-sheet break offsets exactly; n = ±n slots within placement windows
+  stage_time_limit_seconds: [20, 15, 15]  # per queue: shortage, excess/paid, preferences
+  num_workers: 8
+  leave_csv: null                 # optional CSV: agent_id, date (paid leave days)
+  assume_rested_at_start: true    # no prior schedule history available
+  weights:                        # stage-3 soft preferences (lower penalty is better)
+    preferred_shift_miss: 10
+    preferred_day_off_worked: 10
+    weekend_spread: 5
+    late_shift_spread: 5
+    start_change: 1
+
 schedule:
   # First Monday after ACD history ends (2026-09-22). DEMO ASSUMPTION: full Mon–Sun weeks
   # for now; the PRD's midweek partial-week handling comes with the CP-SAT integration.

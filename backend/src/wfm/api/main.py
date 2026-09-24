@@ -4,13 +4,17 @@ import time
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from datetime import date, datetime
+from datetime import time as dtime
 from pathlib import Path
 from typing import Annotated, Any
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel
 
 from wfm import __version__
+from wfm.api.schedule import agent_plan
+from wfm.api.schedule import router as schedule_router
 from wfm.config import load_config, resolve
 from wfm.forecast.api_models import QueueForecast, queue_forecast
 from wfm.forecast.daily import ForecastError, forecast_all
@@ -47,6 +51,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="WFM POC", version=__version__, lifespan=lifespan)
+app.include_router(schedule_router)
 
 
 # Loaded inputs keyed by name; each entry is re-read only when one of its files changes.
@@ -171,11 +176,6 @@ def queue_forecast_daily(queue_id: str) -> QueueForecast:
     return forecast
 
 
-class AgentScheduleResponse(BaseModel):
-    agent: dict[str, object]
-    schedule: AgentSchedule
-
-
 PROFILE_FIELDS = [
     "agent_id", "agent_name", "bu_name", "mu_name", "queue_id", "queue_name", "team_id", "role",
     "employment_type", "primary_skill", "additional_skills", "skill_proficiency", "languages",
@@ -187,19 +187,84 @@ PROFILE_FIELDS = [
 @app.get("/api/agents/{agent_id}/schedule")
 def agent_schedule(
     agent_id: str, weeks: Annotated[int | None, Query(ge=1, le=6)] = None
-) -> AgentScheduleResponse:
-    """Mock schedule until CP-SAT is integrated; the response shape stays the same."""
+) -> dict[str, Any]:
+    """The agent's plan from the latest schedule run; a labelled mock until one exists."""
     data = loaded_data()
     rows = data.roster.agents[data.roster.agents["agent_id"] == agent_id]
     if rows.empty:
         raise HTTPException(status_code=404, detail=f"Unknown agent: {agent_id}")
     agent = {str(k): v for k, v in rows.iloc[0].to_dict().items()}
+    profile = {f: json_value(agent.get(f)) for f in PROFILE_FIELDS if f in agent}
+    plan = agent_plan(agent_id)
+    if plan is not None:
+        return {"agent": profile, "schedule": plan}
+
     settings = load_config().schedule
+    tz = ZoneInfo(load_config().timezone)
     try:
-        schedule = mock_schedule(
+        mock = mock_schedule(
             agent, data.roster.shifts, settings.horizon_start, weeks or settings.horizon_weeks
         )
     except MockScheduleError as e:
         raise HTTPException(status_code=422, detail=str(e)) from e
-    profile = {f: json_value(agent.get(f)) for f in PROFILE_FIELDS if f in agent}
-    return AgentScheduleResponse(agent=profile, schedule=schedule)
+    return {"agent": profile, "schedule": _mock_as_plan(mock, tz)}
+
+
+MOCK_ACTIVITY = {"work": "On Phone", "break": "Paid Break", "meal": "Unpaid Meal"}
+
+
+def _mock_as_plan(mock: AgentSchedule, tz: ZoneInfo) -> dict[str, Any]:
+    """The mock in the same shape as a real plan, so the UI has one format."""
+
+    def iso(d: date, t: dtime | None) -> str | None:
+        return datetime.combine(d, t, tzinfo=tz).isoformat() if t else None
+
+    weeks = []
+    for w in mock.weeks:
+        days = []
+        for d in w.days:
+            days.append(
+                {
+                    "date": d.date.isoformat(),
+                    "weekday": d.weekday,
+                    "status": "Off" if d.off else "Working",
+                    "off": d.off,
+                    "shift_code": d.shift_code,
+                    "shift_name": d.shift_name,
+                    "start": iso(d.date, d.start),
+                    "end": iso(d.date, d.end),
+                    "paid_hours": d.paid_hours,
+                    "preferred_shift_matched": None,
+                    "preferred_day_off": None,
+                    "note": None,
+                    "activities": [
+                        {
+                            "activity_type": MOCK_ACTIVITY[s.kind],
+                            "start": iso(d.date, s.start),
+                            "end": iso(d.date, s.end),
+                            "paid": s.kind != "meal",
+                        }
+                        for s in d.segments
+                    ],
+                }
+            )
+        weeks.append(
+            {
+                "week_start": w.week_start.isoformat(),
+                "paid_hours": w.paid_hours,
+                "days_off": w.days_off,
+                "leave_days": 0,
+                "preferred_shift_matches": None,
+                "working_days": sum(1 for d in w.days if not d.off),
+                "partial": False,
+                "days": days,
+            }
+        )
+    return {
+        "source": "mock",
+        "run_id": None,
+        "validation_status": mock.validation_status,
+        "queue_status": None,
+        "timezone": str(tz),
+        "weeks": weeks,
+    }
