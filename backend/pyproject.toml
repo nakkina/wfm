@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "wfm"
 version = "0.1.0"
-description = "Workforce Management POC: forecasting, staffing and CP-SAT scheduling"
+description = "Workforce Management - POC by Akkina: forecasting, staffing and CP-SAT scheduling"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi",

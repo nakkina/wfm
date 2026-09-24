@@ -14,5 +14,5 @@ test('renders the app title', () => {
       </QueryClientProvider>
     </MantineProvider>,
   )
-  expect(screen.getByText('Workforce Management POC')).toBeInTheDocument()
+  expect(screen.getByText('Workforce Management - POC by Akkina')).toBeInTheDocument()
 })

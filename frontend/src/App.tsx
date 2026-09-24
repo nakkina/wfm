@@ -53,7 +53,7 @@ export default function App() {
     <AppShell header={{ height: 56 }} navbar={{ width: 420, breakpoint: 'sm' }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Title order={3}>Workforce Management POC</Title>
+          <Title order={3}>Workforce Management - POC by Akkina</Title>
           <Group gap="md">
             <ScheduleRunControl />
             <Badge color={health.isSuccess ? 'green' : health.isError ? 'red' : 'gray'}>

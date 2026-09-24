@@ -1,4 +1,4 @@
-# Workforce Management POC — Simplified PRD
+# Workforce Management - POC by Akkina — Simplified PRD
 
 **Version 0.2 · September 23, 2026**
 

@@ -50,7 +50,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-app = FastAPI(title="WFM POC", version=__version__, lifespan=lifespan)
+app = FastAPI(title="Workforce Management - POC by Akkina", version=__version__, lifespan=lifespan)
 app.include_router(schedule_router)
 
 
