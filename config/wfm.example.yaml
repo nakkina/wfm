@@ -1,9 +1,22 @@
 # WFM POC configuration. Paths are relative to the wfm/ folder.
 # Values marked DEMO ASSUMPTION are placeholders until confirmed (see PRD section 7).
 
-timezone: America/New_York  # DEMO ASSUMPTION
+timezone: America/New_York  # matches the agent and ACD workbooks
 
 paths:
-  agents_csv: data/agents.csv
-  acd_history_csv: data/acd_history.csv
+  hierarchy_yaml: config/hierarchy.yaml
+  agents_xlsx: data/wfm_agents_1000.xlsx  # sheets: Agents, Shifts, Dictionary
+  acd_xlsx: data/wfm_acd_hourly_2026-06-23_to_2026-09-22.xlsx  # sheet: Queue hourly
   runs_dir: runs
+
+forecast:
+  horizon_days: 21          # forecast starts the day after ACD history ends
+  levels: [80, 95]          # prediction interval coverage, %
+  cv_windows: 6             # rolling-origin backtests used for model choice and intervals
+  cv_step_days: 7
+
+schedule:
+  # First Monday after ACD history ends (2026-09-22). DEMO ASSUMPTION: full Mon–Sun weeks
+  # for now; the PRD's midweek partial-week handling comes with the CP-SAT integration.
+  horizon_start: 2026-09-28
+  horizon_weeks: 6

@@ -13,6 +13,7 @@ dependencies = [
     "pydantic",
     "pyyaml",
     "pandas",
+    "openpyxl",
     "statsforecast",
     "ortools",
 ]

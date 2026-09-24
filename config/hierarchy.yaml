@@ -1,0 +1,59 @@
+# Organization hierarchy: Business Unit -> Management Unit -> Queue.
+# Queue IDs are PLACEHOLDERS derived from the MU code until the ACD file's queue IDs are known.
+
+name: Financial Services Contact Center
+business_units:
+  - code: BU-CB
+    name: Consumer Banking
+    management_units:
+      - code: MU-CB-DAS
+        name: Deposit Account Services
+        queues:
+          - { id: Q-CB-DAS-01, name: Checking Account Support }
+          - { id: Q-CB-DAS-02, name: Savings & Money Market Support }
+          - { id: Q-CB-DAS-03, name: Certificate of Deposit Services }
+          - { id: Q-CB-DAS-04, name: Account Opening & Verification }
+          - { id: Q-CB-DAS-05, name: Account Maintenance & Closure }
+      - code: MU-CB-CAP
+        name: Cards & Payments
+        queues:
+          - { id: Q-CB-CAP-01, name: Debit Card Activation & Replacement }
+          - { id: Q-CB-CAP-02, name: Credit Card Account & Payment Support }
+          - { id: Q-CB-CAP-03, name: Credit Card Rewards & Benefits }
+          - { id: Q-CB-CAP-04, name: Bank Transfers & Bill Pay }
+          - { id: Q-CB-CAP-05, name: Card Purchase Disputes }
+      - code: MU-CB-DFS
+        name: Digital Access & Fraud Support
+        queues:
+          - { id: Q-CB-DFS-01, name: Online Banking Access }
+          - { id: Q-CB-DFS-02, name: Mobile Banking & Mobile Deposit }
+          - { id: Q-CB-DFS-03, name: Card Fraud Reporting }
+          - { id: Q-CB-DFS-04, name: Unauthorized Transfer & Scam Reporting }
+          - { id: Q-CB-DFS-05, name: Account Takeover & Recovery }
+  - code: BU-CL
+    name: Consumer Lending
+    management_units:
+      - code: MU-CL-MCS
+        name: Mortgage Customer Services
+        queues:
+          - { id: Q-CL-MCS-01, name: Mortgage Application & Document Support }
+          - { id: Q-CL-MCS-02, name: Mortgage Closing Support }
+          - { id: Q-CL-MCS-03, name: Mortgage Payment & Autopay Support }
+          - { id: Q-CL-MCS-04, name: Mortgage Escrow & Insurance Support }
+          - { id: Q-CL-MCS-05, name: Mortgage Payoff & Lien Release }
+      - code: MU-CL-ALS
+        name: Auto & Personal Loan Services
+        queues:
+          - { id: Q-CL-ALS-01, name: Auto Loan Application Support }
+          - { id: Q-CL-ALS-02, name: Auto Loan Payment & Account Support }
+          - { id: Q-CL-ALS-03, name: Vehicle Title & Lien Release }
+          - { id: Q-CL-ALS-04, name: Personal Loan Application Support }
+          - { id: Q-CL-ALS-05, name: Personal Loan Payment & Payoff Support }
+      - code: MU-CL-PAH
+        name: Payment Assistance & Hardship
+        queues:
+          - { id: Q-CL-PAH-01, name: Mortgage Payment Assistance }
+          - { id: Q-CL-PAH-02, name: Auto Loan Payment Assistance }
+          - { id: Q-CL-PAH-03, name: Personal Loan Payment Assistance }
+          - { id: Q-CL-PAH-04, name: Credit Card Payment Assistance }
+          - { id: Q-CL-PAH-05, name: Hardship Application & Document Support }
