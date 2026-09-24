@@ -2,13 +2,14 @@
 .env
 config/wfm.yaml
 
-# Input data and run outputs stay local
-data/*
-!data/.gitkeep
-runs/*
-!runs/.gitkeep
+# data/ (input workbooks) and runs/ (saved forecast and schedule runs) ARE committed, so a
+# fresh clone shows forecasts and schedules without rerunning StatsForecast or CP-SAT.
+# The data is synthetic (is_synthetic = True in both workbooks).
 
-# Python
+# Office lock files created while a workbook is open
+~$*
+
+# Python environment, build metadata and tool caches (recreated by `make install`)
 backend/.venv/
 __pycache__/
 *.egg-info/
@@ -16,7 +17,7 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 
-# Frontend
+# Frontend dependencies and build output (recreated by `make install` / `npm run build`)
 frontend/node_modules/
 frontend/dist/
 

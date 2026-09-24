@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "checks": {
+    "one status per agent per day": 0,
+    "home queue": 0,
+    "allowed shift": 0,
+    "available day": 0,
+    "no work on leave": 0,
+    "activity timeline complete": 0,
+    "paid/unpaid accounting": 0,
+    "breaks and meal": 0,
+    "weekly paid hours": 0,
+    "minimum rest": 0,
+    "consecutive workdays": 0,
+    "coverage recount": 0
+  },
+  "violations": []
+}

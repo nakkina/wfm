@@ -1,0 +1,878 @@
+{
+  "run_id": "20260924T032307",
+  "created_at": "2026-09-24T03:31:09+00:00",
+  "forecast_run_id": "20260924T024139-44d3ff3e",
+  "horizon": {
+    "start": "2026-09-23",
+    "end": "2026-10-13",
+    "days": 21
+  },
+  "config": {
+    "staffing": {
+      "interval_minutes": 15,
+      "service_level_target": 0.8,
+      "answer_threshold_seconds": 20.0,
+      "max_occupancy": 0.85,
+      "residual_shrinkage": 0.1,
+      "closing_minutes": 15,
+      "within_hour_proportions": null
+    },
+    "scheduling": {
+      "break_stagger_slots": 0,
+      "stage_time_limit_seconds": [
+        20.0,
+        15.0,
+        15.0
+      ],
+      "num_workers": 8,
+      "leave_csv": null,
+      "assume_rested_at_start": true,
+      "weights": {
+        "preferred_shift_miss": 10,
+        "preferred_day_off_worked": 10,
+        "weekend_spread": 5,
+        "late_shift_spread": 5,
+        "start_change": 1
+      }
+    }
+  },
+  "queues": {
+    "Q-CB-CAP-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 21495.0,
+          "bound": 21495.0,
+          "seconds": 1.588
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 308730.0,
+          "bound": 308730.0,
+          "seconds": 0.29
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2220.0,
+          "bound": 2204.0,
+          "seconds": 15.02
+        }
+      ],
+      "shortage_agent_hours": 358.25
+    },
+    "Q-CB-CAP-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 20280.0,
+          "bound": 20280.0,
+          "seconds": 0.818
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 265440.0,
+          "bound": 265440.0,
+          "seconds": 0.228
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1921.0,
+          "bound": 1910.0,
+          "seconds": 15.019
+        }
+      ],
+      "shortage_agent_hours": 338.0
+    },
+    "Q-CB-CAP-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 20655.0,
+          "bound": 20655.0,
+          "seconds": 1.16
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 241170.0,
+          "bound": 241170.0,
+          "seconds": 0.196
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1998.0,
+          "bound": 1922.0,
+          "seconds": 15.009
+        }
+      ],
+      "shortage_agent_hours": 344.25
+    },
+    "Q-CB-CAP-04": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 19020.0,
+          "bound": 19020.0,
+          "seconds": 1.744
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 347730.0,
+          "bound": 347730.0,
+          "seconds": 0.257
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2012.0,
+          "bound": 2002.0,
+          "seconds": 15.034
+        }
+      ],
+      "shortage_agent_hours": 317.0
+    },
+    "Q-CB-CAP-05": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 28515.0,
+          "bound": 28515.0,
+          "seconds": 1.217
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 318330.0,
+          "bound": 318330.0,
+          "seconds": 0.231
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2534.0,
+          "bound": 2514.0,
+          "seconds": 15.015
+        }
+      ],
+      "shortage_agent_hours": 475.25
+    },
+    "Q-CB-DAS-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 28395.0,
+          "bound": 28395.0,
+          "seconds": 0.882
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 257790.0,
+          "bound": 257790.0,
+          "seconds": 0.187
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1718.0,
+          "bound": 1698.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 473.25
+    },
+    "Q-CB-DAS-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 23055.0,
+          "bound": 23055.0,
+          "seconds": 0.604
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 220185.0,
+          "bound": 220185.0,
+          "seconds": 0.188
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1802.0,
+          "bound": 1790.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 384.25
+    },
+    "Q-CB-DAS-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 24615.0,
+          "bound": 24615.0,
+          "seconds": 0.927
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 230805.0,
+          "bound": 230805.0,
+          "seconds": 0.192
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1754.0,
+          "bound": 1749.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 410.25
+    },
+    "Q-CB-DAS-04": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 17280.0,
+          "bound": 17280.0,
+          "seconds": 0.822
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 246825.0,
+          "bound": 246825.0,
+          "seconds": 0.203
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2150.0,
+          "bound": 2146.0,
+          "seconds": 15.014
+        }
+      ],
+      "shortage_agent_hours": 288.0
+    },
+    "Q-CB-DAS-05": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 27900.0,
+          "bound": 27900.0,
+          "seconds": 1.445
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 269910.0,
+          "bound": 269910.0,
+          "seconds": 0.223
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2264.0,
+          "bound": 2254.0,
+          "seconds": 15.007
+        }
+      ],
+      "shortage_agent_hours": 465.0
+    },
+    "Q-CB-DFS-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 17790.0,
+          "bound": 17790.0,
+          "seconds": 0.469
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 194340.0,
+          "bound": 194340.0,
+          "seconds": 0.194
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2011.0,
+          "bound": 2008.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 296.5
+    },
+    "Q-CB-DFS-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 13890.0,
+          "bound": 13890.0,
+          "seconds": 0.573
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 226590.0,
+          "bound": 226590.0,
+          "seconds": 0.366
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1599.0,
+          "bound": 1595.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 231.5
+    },
+    "Q-CB-DFS-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 15915.0,
+          "bound": 15915.0,
+          "seconds": 0.624
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 265350.0,
+          "bound": 265350.0,
+          "seconds": 0.205
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1334.0,
+          "bound": 1324.0,
+          "seconds": 15.013
+        }
+      ],
+      "shortage_agent_hours": 265.25
+    },
+    "Q-CB-DFS-04": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 21360.0,
+          "bound": 21360.0,
+          "seconds": 1.209
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 262920.0,
+          "bound": 262920.0,
+          "seconds": 0.262
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1197.0,
+          "bound": 1190.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 356.0
+    },
+    "Q-CB-DFS-05": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 23205.0,
+          "bound": 23205.0,
+          "seconds": 0.387
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 155040.0,
+          "bound": 155040.0,
+          "seconds": 0.137
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1376.0,
+          "bound": 1372.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 386.75
+    },
+    "Q-CL-ALS-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 18480.0,
+          "bound": 18480.0,
+          "seconds": 0.876
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 277590.0,
+          "bound": 277590.0,
+          "seconds": 0.21
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2043.0,
+          "bound": 2038.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 308.0
+    },
+    "Q-CL-ALS-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 25875.0,
+          "bound": 25875.0,
+          "seconds": 1.036
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 311280.0,
+          "bound": 311280.0,
+          "seconds": 0.255
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2003.0,
+          "bound": 1990.0,
+          "seconds": 15.012
+        }
+      ],
+      "shortage_agent_hours": 431.25
+    },
+    "Q-CL-ALS-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 23790.0,
+          "bound": 23790.0,
+          "seconds": 0.527
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 209145.0,
+          "bound": 209145.0,
+          "seconds": 0.224
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2360.0,
+          "bound": 2353.0,
+          "seconds": 15.009
+        }
+      ],
+      "shortage_agent_hours": 396.5
+    },
+    "Q-CL-ALS-04": {
+      "status": "Optimal",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 19995.0,
+          "bound": 19995.0,
+          "seconds": 0.539
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 180705.0,
+          "bound": 180705.0,
+          "seconds": 0.166
+        },
+        {
+          "stage": "preferences",
+          "status": "Optimal",
+          "objective": 1296.0,
+          "bound": 1296.0,
+          "seconds": 9.036
+        }
+      ],
+      "shortage_agent_hours": 333.25
+    },
+    "Q-CL-ALS-05": {
+      "status": "Optimal",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 17730.0,
+          "bound": 17730.0,
+          "seconds": 0.426
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 180675.0,
+          "bound": 180675.0,
+          "seconds": 0.182
+        },
+        {
+          "stage": "preferences",
+          "status": "Optimal",
+          "objective": 1806.0,
+          "bound": 1806.0,
+          "seconds": 5.788
+        }
+      ],
+      "shortage_agent_hours": 295.5
+    },
+    "Q-CL-MCS-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 32580.0,
+          "bound": 32580.0,
+          "seconds": 1.16
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 341220.0,
+          "bound": 341220.0,
+          "seconds": 0.245
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 3557.0,
+          "bound": 3539.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 543.0
+    },
+    "Q-CL-MCS-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 31020.0,
+          "bound": 31020.0,
+          "seconds": 0.556
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 245355.0,
+          "bound": 245355.0,
+          "seconds": 0.209
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2059.0,
+          "bound": 2053.0,
+          "seconds": 15.015
+        }
+      ],
+      "shortage_agent_hours": 517.0
+    },
+    "Q-CL-MCS-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 32460.0,
+          "bound": 32460.0,
+          "seconds": 1.138
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 284820.0,
+          "bound": 284820.0,
+          "seconds": 0.259
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1869.0,
+          "bound": 1859.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 541.0
+    },
+    "Q-CL-MCS-04": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 30330.0,
+          "bound": 30330.0,
+          "seconds": 0.921
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 251535.0,
+          "bound": 251535.0,
+          "seconds": 0.233
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2311.0,
+          "bound": 2299.0,
+          "seconds": 15.008
+        }
+      ],
+      "shortage_agent_hours": 505.5
+    },
+    "Q-CL-MCS-05": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 18465.0,
+          "bound": 18465.0,
+          "seconds": 1.03
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 288075.0,
+          "bound": 288075.0,
+          "seconds": 0.214
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1795.0,
+          "bound": 1788.0,
+          "seconds": 15.009
+        }
+      ],
+      "shortage_agent_hours": 307.75
+    },
+    "Q-CL-PAH-01": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 25890.0,
+          "bound": 25890.0,
+          "seconds": 1.328
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 337170.0,
+          "bound": 337170.0,
+          "seconds": 0.268
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 2483.0,
+          "bound": 2473.0,
+          "seconds": 15.009
+        }
+      ],
+      "shortage_agent_hours": 431.5
+    },
+    "Q-CL-PAH-02": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 16725.0,
+          "bound": 16725.0,
+          "seconds": 0.778
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 268065.0,
+          "bound": 268065.0,
+          "seconds": 0.266
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1643.0,
+          "bound": 1627.0,
+          "seconds": 15.016
+        }
+      ],
+      "shortage_agent_hours": 278.75
+    },
+    "Q-CL-PAH-03": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 22965.0,
+          "bound": 22965.0,
+          "seconds": 0.935
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 231480.0,
+          "bound": 231480.0,
+          "seconds": 0.216
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1970.0,
+          "bound": 1962.0,
+          "seconds": 15.01
+        }
+      ],
+      "shortage_agent_hours": 382.75
+    },
+    "Q-CL-PAH-04": {
+      "status": "Feasible",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 23730.0,
+          "bound": 23730.0,
+          "seconds": 1.325
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 255480.0,
+          "bound": 255480.0,
+          "seconds": 0.216
+        },
+        {
+          "stage": "preferences",
+          "status": "Feasible",
+          "objective": 1855.0,
+          "bound": 1820.0,
+          "seconds": 15.013
+        }
+      ],
+      "shortage_agent_hours": 395.5
+    },
+    "Q-CL-PAH-05": {
+      "status": "Optimal",
+      "stages": [
+        {
+          "stage": "shortage",
+          "status": "Optimal",
+          "objective": 36060.0,
+          "bound": 36060.0,
+          "seconds": 1.519
+        },
+        {
+          "stage": "excess_and_paid",
+          "status": "Optimal",
+          "objective": 221055.0,
+          "bound": 221055.0,
+          "seconds": 0.219
+        },
+        {
+          "stage": "preferences",
+          "status": "Optimal",
+          "objective": 1462.0,
+          "bound": 1462.0,
+          "seconds": 8.613
+        }
+      ],
+      "shortage_agent_hours": 601.0
+    }
+  },
+  "status_counts": {
+    "Feasible": 27,
+    "Optimal": 3
+  },
+  "agents": {
+    "scheduled": 1000,
+    "excluded": []
+  },
+  "conflicts": [],
+  "shortage_agent_hours": 11657.75,
+  "validation_passed": true,
+  "assumptions": [
+    "Intraday profile learned from hourly ACD history (queue \u00d7 weekday \u00d7 hour, event days excluded)",
+    "Calls split equally across the open minutes of each hour unless configured; estimated allocations",
+    "AHT held constant within each day",
+    "No prior schedule history: agents assumed rested at the horizon start",
+    "Partial horizon weeks: paid-hour bounds pro-rated by available days, whole shifts",
+    "Intraday availability windows not supplied: agents available for any allowed shift",
+    "Closing allowance: 15 min after close at ceil(last-interval load) agents",
+    "Erlang C ignores abandonment; service levels are modelled estimates"
+  ],
+  "runtime_seconds": 480.13,
+  "versions": {
+    "python": "3.14.7",
+    "ortools": "9.15.6755",
+    "pandas": "2.3.3"
+  }
+}
